@@ -444,7 +444,7 @@ public partial class MainWindows : Form
         controlToolTip.SetToolTip(mode1Button, result.LowestLevelAvailable
             ? "Minimum speed" : "BIOS has not confirmed that Min keeps the fan spinning");
         controlModeLabel.Text = result.Message;
-        controlModeLabel.ForeColor = result.CanControl ? Color.DimGray : Color.Firebrick;
+        controlModeLabel.ForeColor = result.CanControl && result.Snapshot.CpuTemperature.HasValue ? Color.DimGray : Color.Firebrick;
         controlToolTip.SetToolTip(controlModeLabel, result.Message);
         UpdateTrayText();
     }

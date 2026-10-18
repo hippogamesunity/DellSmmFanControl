@@ -36,11 +36,9 @@ internal sealed class FanController : IDisposable
             .DistinctBy(profile => profile.Index).ToArray();
         bool lowestAvailable = _activeFans.Length > 0 && _activeFans.All(fan => fan.SupportsMinimum);
         string? reason = _fault;
-        if (reason is null && !request.Auto && request.Level == 0 && !lowestAvailable)
+        bool needsMinimum = request.Auto ? snapshot.CpuTemperature is null : request.Level == 0;
+        if (reason is null && needsMinimum && !lowestAvailable)
             reason = "BIOS has not confirmed that Min keeps the fan spinning";
-        // Manual modes also need a live CPU reading for overheat protection.
-        if (reason is null && snapshot.CpuTemperature is null)
-            reason = snapshot.TemperatureError ?? "CPU temperature sensor is unavailable";
         if (reason is null && (_activeFans.Length == 0 || snapshot.Fans.Any(fan => fan.Rpm is > 0 &&
             !_activeFans.Any(profile => profile.Index == fan.Index))))
             reason = "No fans are available for control";
@@ -66,12 +64,23 @@ internal sealed class FanController : IDisposable
                 _silent.Reset();
             _wasAuto = request.Auto;
             int? temperature = snapshot.CpuTemperature;
-            int autoLevel = request.Auto
-                ? _silent.SelectLevel(temperature!.Value, snapshot.Timestamp, lowestAvailable ? 0 : 1) : 1;
-            if (temperature >= 85)
-                _emergency = true;
-            else if (temperature <= 75)
+            int autoLevel = 0;
+            if (temperature is int currentTemperature)
+            {
+                if (request.Auto)
+                    autoLevel = _silent.SelectLevel(currentTemperature, snapshot.Timestamp, lowestAvailable ? 0 : 1);
+                if (currentTemperature >= 85)
+                    _emergency = true;
+                else if (currentTemperature <= 75)
+                    _emergency = false;
+            }
+            else
+            {
+                // Without a live reading, Auto uses Min and manual modes remain
+                // selectable. Reset temperature-dependent state until readings return.
+                _silent.Reset();
                 _emergency = false;
+            }
             bool waitingForRpm = false;
             int level = _emergency ? 2 : request.Auto ? autoLevel : request.Level;
             foreach (FanProfile fan in _activeFans)
@@ -93,8 +102,10 @@ internal sealed class FanController : IDisposable
                 waitingForRpm |= expectedRpm.HasValue && !reached;
             }
             string message = _emergency ? "Maximum cooling · overheat protection"
-                : request.Auto ? $"Auto · Silent · {ModeName(autoLevel)}"
+                : request.Auto ? temperature.HasValue ? $"Auto · Silent · {ModeName(autoLevel)}" : "Auto · Min"
                 : $"Manual mode · {ModeName(request.Level)}";
+            if (!temperature.HasValue)
+                message += " · CPU temperature unavailable";
             if (waitingForRpm)
                 message += " · waiting for RPM";
             return new(snapshot, true, lowestAvailable, message, level);

@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType>
     <Title>Dell SMM Fan Control</Title>
     <Product>Dell SMM Fan Control</Product>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Description>Desktop fan control and CPU temperature monitoring for compatible Dell SMM firmware.</Description>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>

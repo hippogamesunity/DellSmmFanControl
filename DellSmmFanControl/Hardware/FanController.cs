@@ -8,6 +8,7 @@ internal sealed class FanController : IDisposable
 {
     private readonly DellFanMonitor _monitor;
     private readonly SilentFanPolicy _silent = new();
+    private readonly CpuLoadFanPolicy _cpuLoad = new();
     private FanProfile[]? _activeFans;
     private bool _attemptedControl;
     private bool _wasAuto = true;
@@ -31,12 +32,17 @@ internal sealed class FanController : IDisposable
             _lastRequest = request;
         }
         FanSnapshot snapshot = _monitor.Read();
+        int loadLevel = 0;
+        if (request.Auto && snapshot.CpuTemperature is null)
+            loadLevel = _cpuLoad.SelectLevel();
+        else
+            _cpuLoad.Reset();
         _activeFans = (_activeFans ?? []).Concat(_monitor.Profiles.Where(profile =>
             snapshot.Fans.Any(fan => fan.Index == profile.Index && fan.Rpm is > 0)))
             .DistinctBy(profile => profile.Index).ToArray();
         bool lowestAvailable = _activeFans.Length > 0 && _activeFans.All(fan => fan.SupportsMinimum);
         string? reason = _fault;
-        bool needsMinimum = request.Auto ? snapshot.CpuTemperature is null : request.Level == 0;
+        bool needsMinimum = request.Auto ? snapshot.CpuTemperature is null && loadLevel == 0 : request.Level == 0;
         if (reason is null && needsMinimum && !lowestAvailable)
             reason = "BIOS has not confirmed that Min keeps the fan spinning";
         if (reason is null && (_activeFans.Length == 0 || snapshot.Fans.Any(fan => fan.Rpm is > 0 &&
@@ -76,8 +82,9 @@ internal sealed class FanController : IDisposable
             }
             else
             {
-                // Without a live reading, Auto uses Min and manual modes remain
-                // selectable. Reset temperature-dependent state until readings return.
+                // Only Auto uses the rolling CPU-load fallback. Manual selections
+                // remain effective when temperature-dependent protection is unavailable.
+                autoLevel = loadLevel;
                 _silent.Reset();
                 _emergency = false;
             }
@@ -102,7 +109,10 @@ internal sealed class FanController : IDisposable
                 waitingForRpm |= expectedRpm.HasValue && !reached;
             }
             string message = _emergency ? "Maximum cooling · overheat protection"
-                : request.Auto ? temperature.HasValue ? $"Auto · Silent · {ModeName(autoLevel)}" : "Auto · Min"
+                : request.Auto ? temperature.HasValue ? $"Auto · Silent · {ModeName(autoLevel)}"
+                    : $"Auto · {ModeName(autoLevel)} · " + (_cpuLoad.AveragePercent is double average
+                        ? $"CPU avg {average:F0}%" + (_cpuLoad.SampledSeconds < 60 ? $" ({_cpuLoad.SampledSeconds}/60 s)" : "")
+                        : "CPU load sampling")
                 : $"Manual mode · {ModeName(request.Level)}";
             if (!temperature.HasValue)
                 message += " · CPU temperature unavailable";

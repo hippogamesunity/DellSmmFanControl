@@ -16,8 +16,10 @@ raising speed at 65 °C and 85 °C. The window shows RPM, fan percentage, CPU
 temperature and its maximum since launch. Supports up to two running fans,
 startup at sign-in and minimizing to the system tray, where temperature
 monitoring and fan control continue in the background.
-If CPU temperature is unavailable, manual modes remain usable and Auto uses Min
-when supported. Temperature-based protection resumes when readings return.
+If CPU temperature is unavailable, Auto uses Min and switches to Normal when
+average CPU load over the last full minute exceeds 90%. It returns to Min when
+the average drops to 90% or below. Manual modes remain usable; temperature-based
+control resumes when readings return. CPU load is read using the Windows API.
 
 ## Running
 

@@ -2,6 +2,7 @@ using DellSmmFanControl.Hardware;
 using DellSmmFanControl.Settings;
 using DellSmmFanControl.SystemIntegration;
 using Microsoft.Win32;
+using System.Runtime.InteropServices;
 
 namespace DellSmmFanControl;
 
@@ -146,6 +147,47 @@ public partial class MainWindows : Form
         }
         finally { _changingTrayVisibility = false; }
     }
+
+    protected override void WndProc(ref Message message)
+    {
+        const int wmSysCommand = 0x0112;
+        const long scMinimize = 0xF020;
+        // Treat taskbar minimize requests as activation, even when we already
+        // have focus. Caption-button clicks still perform normal minimization.
+        if (message.Msg == wmSysCommand && (message.WParam.ToInt64() & 0xFFF0) == scMinimize &&
+            _hasBeenShown && !_closing && !_changingTrayVisibility &&
+            WindowState != FormWindowState.Minimized &&
+            (GetForegroundWindow() != message.HWnd ||
+                (message.LParam == 0 && IsPointerOverTaskbar())))
+        {
+            message.Result = 0;
+            // Restore outside WndProc: ShowInTaskbar may recreate the handle.
+            BeginInvoke((Action)RestoreFromTray);
+            return;
+        }
+        base.WndProc(ref message);
+    }
+
+    private static bool IsPointerOverTaskbar()
+    {
+        // GA_ROOT resolves XAML/task-list child windows to their taskbar.
+        nint root = GetAncestor(WindowFromPoint(Cursor.Position), 2);
+        var className = new System.Text.StringBuilder(64);
+        return GetClassName(root, className, className.Capacity) > 0 &&
+            className.ToString() is "Shell_TrayWnd" or "Shell_SecondaryTrayWnd";
+    }
+
+    [DllImport("user32.dll")]
+    private static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern nint WindowFromPoint(Point point);
+
+    [DllImport("user32.dll")]
+    private static extern nint GetAncestor(nint window, uint flags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetClassName(nint window, System.Text.StringBuilder className, int capacity);
 
     private FanMode SelectedMode => autoModeButton.Checked ? FanMode.Auto
         : mode1Button.Checked ? FanMode.Min : mode2Button.Checked ? FanMode.Normal : FanMode.Max;

@@ -1,0 +1,20 @@
+﻿The application directly uses the signed bzh_dell_smm_io_x64.sys driver
+from DellFanCmd 1.1. Driver author: 424778940z. Signed by Aaron Kelley.
+The driver is unmodified and licensed under GPLv3 (see DellSmm-LICENSE.txt).
+Binary source: https://github.com/AaronKelley/DellFanCmd/releases/tag/1.1
+Driver source: https://github.com/424778940z/bzh-windrv-dell-smm-io
+Vendored source revision: 67786c69a80f2dd3e0d948cfaba6ced6c2c090e3
+Unmodified upstream snapshot: driver-source/ in this repository,
+or ThirdParty/DriverSource/ in portable releases, including build files and
+the assembly source for the low-level library. The driver is not rebuilt here.
+SHA-256: c524435027b6c252464dab58e78cb01f7a09c820dad870677aa15b62b974b2af
+
+No PawnIO or SpeedFan dependency. No setup program is run.
+Windows registers a demand-start kernel service while the application runs.
+On normal exit, the application stops the driver and deletes its own service.
+A crash or forced termination can leave the driver loaded until reboot and
+its service registration until the next successful launch/cleanup.
+Windows event logs can retain records of driver loading.
+
+The application's noncommercial license does not apply to this driver or
+its source. They retain their original GPLv3 terms, including commercial rights.

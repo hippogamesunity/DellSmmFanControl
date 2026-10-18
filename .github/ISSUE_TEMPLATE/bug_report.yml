@@ -1,0 +1,23 @@
+name: Bug or compatibility report
+description: Report an application issue or a Dell model compatibility result.
+body:
+  - type: input
+    id: model
+    attributes:
+      label: Dell model and BIOS version
+      placeholder: OptiPlex 9010 SFF, BIOS A30
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows and application version
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Behavior and exact status text
+      description: Include mode, RPM, CPU temperature, reproduction steps and expected behavior. Remove service tags, usernames and other personal information.
+    validations:
+      required: true

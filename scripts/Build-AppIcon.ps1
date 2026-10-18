@@ -1,7 +1,6 @@
 param(
     [string]$Source = "$PSScriptRoot\..\DellSmmFanControl\Assets\fan-master.png",
-    [string]$Destination = "$PSScriptRoot\..\DellSmmFanControl\Assets\fan.ico",
-    [string]$PngDestination = "$PSScriptRoot\..\DellSmmFanControl\Assets\fan.png"
+    [string]$Destination = "$PSScriptRoot\..\DellSmmFanControl\Assets\fan.ico"
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -56,12 +55,11 @@ try {
             $graphics.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
             $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
             $graphics.DrawImage($sourceImage, [System.Drawing.Rectangle]::new(0, 0, $size, $size))
-            $bitmap.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
-            if ($size -eq 256) { $frames.Add($png.ToArray()) }
-            else { $frames.Add((ConvertTo-IconDib $bitmap)) }
-            if ($size -eq 128) {
-                [System.IO.File]::WriteAllBytes([System.IO.Path]::GetFullPath($PngDestination), $png.ToArray())
+            if ($size -eq 256) {
+                $bitmap.Save($png, [System.Drawing.Imaging.ImageFormat]::Png)
+                $frames.Add($png.ToArray())
             }
+            else { $frames.Add((ConvertTo-IconDib $bitmap)) }
         }
         finally { $png.Dispose(); $graphics.Dispose(); $bitmap.Dispose() }
     }

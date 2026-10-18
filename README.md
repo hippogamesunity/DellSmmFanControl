@@ -35,8 +35,6 @@ dotnet build .\DellSmmFanControl.sln -c Release
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\Publish-Portable.ps1
 ```
 
-[Release instructions](docs/RELEASING.md) · [Compatibility and review](docs/REVIEW.md)
-
 ## License
 
 Application: [PolyForm Noncommercial 1.0.0](LICENSE.md), for noncommercial use.

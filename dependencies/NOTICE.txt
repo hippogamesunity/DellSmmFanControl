@@ -9,7 +9,11 @@ https://github.com/hippogamesunity/DellSmmFanControl/tree/main/dependencies/driv
 Pinned upstream snapshot:
 https://github.com/424778940z/bzh-windrv-dell-smm-io/tree/67786c69a80f2dd3e0d948cfaba6ced6c2c090e3
 The source is also included in GitHub's Source code archives for this release.
-The driver is not rebuilt here.
+The source snapshot retains the original license, Visual C++/WDK build files
+and assembly source for the low-level library. It is not part of the .NET
+solution. The upstream README documents Visual Studio 2015 and Windows 10 x64.
+The signed driver is not rebuilt or modified here.
+Binary size: 16,128 bytes.
 SHA-256: c524435027b6c252464dab58e78cb01f7a09c820dad870677aa15b62b974b2af
 
 No PawnIO or SpeedFan dependency. No setup program is run.

@@ -12,8 +12,7 @@ original licenses.
 
 The unmodified signed Dell SMM driver is distributed under GPLv3 with its license,
 attribution and source links. The upstream source snapshot is kept in the repository. See
-[dependencies/NOTICE.txt](dependencies/NOTICE.txt) and
-[docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
+[dependencies/NOTICE.txt](dependencies/NOTICE.txt).
 
 Portable releases include .NET under its own license. The packaging script copies
 the license and third-party notices from the runtime packages used for that build.

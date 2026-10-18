@@ -11,7 +11,7 @@ runtime, or their dependencies. Nothing here restricts rights granted by their
 original licenses.
 
 The unmodified signed Dell SMM driver is distributed under GPLv3 with its license,
-upstream source snapshot and attribution. See
+attribution and source links. The upstream source snapshot is kept in the repository. See
 [dependencies/NOTICE.txt](dependencies/NOTICE.txt) and
 [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
 

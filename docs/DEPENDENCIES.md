@@ -17,7 +17,7 @@ the distributed binary was signed by Aaron Kelley.
 
 `dependencies/driver-source/` is an unmodified upstream snapshot, including
 the original license, Visual C++/WDK build files and assembly source for the
-low-level library. Releases include it under `ThirdParty/DriverSource/`.
+low-level library. It is available in this repository and GitHub release source archives; the portable ZIP contains only binaries, licenses and notices.
 It is kept separate from the application and is not built by the .NET solution.
 The upstream README describes Visual Studio 2015 and Windows 10 x64. Driver
 rebuilding/signing is outside this application's build process. No reproducible
@@ -36,7 +36,7 @@ reboot ends the loaded driver, but the service entry can remain until cleanup.
 
 The noncommercial license of the application does not change the GPL rights in
 the driver or upstream source. Distribute their original license, notices and
-source together. Separate license files do not by themselves settle whether any
+source access together. Separate license files do not by themselves settle whether any
 future combination or copied code is a derivative work; review licensing when
 changing the boundary or redistributing a modified driver.
 

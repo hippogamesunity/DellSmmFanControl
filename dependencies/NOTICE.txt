@@ -1,12 +1,15 @@
-﻿The application directly uses the signed bzh_dell_smm_io_x64.sys driver
+The application directly uses the signed bzh_dell_smm_io_x64.sys driver
 from DellFanCmd 1.1. Driver author: 424778940z. Signed by Aaron Kelley.
 The driver is unmodified and licensed under GPLv3 (see DellSmm-LICENSE.txt).
 Binary source: https://github.com/AaronKelley/DellFanCmd/releases/tag/1.1
 Driver source: https://github.com/424778940z/bzh-windrv-dell-smm-io
 Vendored source revision: 67786c69a80f2dd3e0d948cfaba6ced6c2c090e3
-Unmodified upstream snapshot: driver-source/ in this repository,
-or ThirdParty/DriverSource/ in portable releases, including build files and
-the assembly source for the low-level library. The driver is not rebuilt here.
+Unmodified upstream source, including build files and assembly source:
+https://github.com/hippogamesunity/DellSmmFanControl/tree/main/dependencies/driver-source
+Pinned upstream snapshot:
+https://github.com/424778940z/bzh-windrv-dell-smm-io/tree/67786c69a80f2dd3e0d948cfaba6ced6c2c090e3
+The source is also included in GitHub's Source code archives for this release.
+The driver is not rebuilt here.
 SHA-256: c524435027b6c252464dab58e78cb01f7a09c820dad870677aa15b62b974b2af
 
 No PawnIO or SpeedFan dependency. No setup program is run.

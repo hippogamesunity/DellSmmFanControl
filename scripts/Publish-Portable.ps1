@@ -19,9 +19,8 @@ if ((Get-FileHash -LiteralPath $driverPath -Algorithm SHA256).Hash -ne $driverHa
 
 $stagePath = Join-Path $workspacePath ('artifacts\staging\' + [Guid]::NewGuid().ToString('N'))
 $portablePath = Join-Path $stagePath 'portable'
-$sourcePath = Join-Path $stagePath 'source'
 $releasePath = Join-Path $workspacePath 'artifacts\releases'
-New-Item -ItemType Directory -Path $portablePath, $sourcePath, $releasePath -Force | Out-Null
+New-Item -ItemType Directory -Path $portablePath, $releasePath -Force | Out-Null
 
 try {
     # This command compiles and publishes only. It never starts the application.
@@ -54,59 +53,33 @@ try {
         if (Test-Path -LiteralPath $notices) { Copy-Item -LiteralPath $notices -Destination $noticeDestination }
     }
 
-    $required = @('DellSmmFanControl.exe', 'bzh_dell_smm_io_x64.sys', 'LICENSE.md', 'NOTICE.md', 'README.md',
-        'ThirdParty\DellSmm-LICENSE.txt', 'ThirdParty\NOTICE.txt', 'ThirdParty\DriverSource\LICENSE',
-        'ThirdParty\DriverSource\bzh_dell_smm_io.sln',
-        'ThirdParty\DriverSource\bzh_dell_smm_io\bzh_dell_smm_lowlevel\bzh_dell_smm_lowlevel.asm')
+    $required = @('DellSmmFanControl.exe', 'bzh_dell_smm_io_x64.sys', 'LICENSE.md', 'NOTICE.md',
+        'ThirdParty\DellSmm-LICENSE.txt', 'ThirdParty\NOTICE.txt')
     foreach ($relative in $required) {
         if (!(Test-Path -LiteralPath (Join-Path $portablePath $relative))) { throw "Missing package file: $relative" }
     }
     if ((Get-FileHash -LiteralPath (Join-Path $portablePath 'bzh_dell_smm_io_x64.sys') -Algorithm SHA256).Hash -ne $driverHash) {
         throw 'Published driver checksum mismatch.'
     }
-    # Include the documentation linked by the README in the portable package.
-    Copy-Item -LiteralPath (Join-Path $workspacePath 'docs') -Destination $portablePath -Recurse
-    Copy-Item -LiteralPath (Join-Path $workspacePath 'CONTRIBUTING.md') -Destination $portablePath
-
-    # Explicit source roots exclude local firmware investigations, credentials,
-    # IDE state, build caches and all prior release artifacts.
-    $sourceRoots = @('DellSmmFanControl', 'dependencies', 'scripts', 'docs', '.github', '.vscode',
-        'DellSmmFanControl.sln', '.editorconfig', '.gitattributes', '.gitignore',
-        'LICENSE.md', 'NOTICE.md', 'README.md', 'CONTRIBUTING.md')
-    foreach ($root in $sourceRoots) {
-        $itemPath = Join-Path $workspacePath $root
-        foreach ($file in Get-ChildItem -LiteralPath $itemPath -Recurse -File -Force) {
-            $relative = $file.FullName.Substring($workspacePath.Length + 1)
-            if ($relative -match '(^|[\\/])(bin|obj|\.git|\.vs|\.nuget)([\\/]|$)' -or
-                $relative -match '\.(user|suo|pfx|p12|key)$' -or $file.Name -like '.env*') { continue }
-            $destination = Join-Path $sourcePath $relative
-            New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
-            Copy-Item -LiteralPath $file.FullName -Destination $destination
-        }
-    }
-
     # .NET's ZIP API includes dotfiles (Compress-Archive can omit hidden files).
     Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $checksums = @()
-    foreach ($package in @(@('win-x64', $portablePath), @('source', $sourcePath))) {
-        $zipName = "DellSmmFanControl-$Version-$($package[0]).zip"
-        $temporaryZip = Join-Path $stagePath $zipName
-        $archive = [IO.Compression.ZipFile]::Open($temporaryZip, [IO.Compression.ZipArchiveMode]::Create)
-        try {
-            foreach ($file in Get-ChildItem -LiteralPath $package[1] -Recurse -File -Force) {
-                $entryName = $file.FullName.Substring($package[1].Length + 1).Replace('\', '/')
-                [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file.FullName,
-                    $entryName, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
-            }
+    $zipName = "DellSmmFanControl-$Version-win-x64.zip"
+    $temporaryZip = Join-Path $stagePath $zipName
+    $archive = [IO.Compression.ZipFile]::Open($temporaryZip, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($file in Get-ChildItem -LiteralPath $portablePath -Recurse -File -Force) {
+            $entryName = $file.FullName.Substring($portablePath.Length + 1).Replace('\', '/')
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($archive, $file.FullName,
+                $entryName, [IO.Compression.CompressionLevel]::Optimal) | Out-Null
         }
-        finally { $archive.Dispose() }
-        $destinationZip = Join-Path $releasePath $zipName
-        Move-Item -LiteralPath $temporaryZip -Destination $destinationZip -Force
-        $checksums += (Get-FileHash -LiteralPath $destinationZip -Algorithm SHA256).Hash.ToLowerInvariant() + "  $zipName"
-        Write-Output $destinationZip
     }
-    [IO.File]::WriteAllLines((Join-Path $releasePath "DellSmmFanControl-$Version-SHA256SUMS.txt"), $checksums)
+    finally { $archive.Dispose() }
+    $destinationZip = Join-Path $releasePath $zipName
+    Move-Item -LiteralPath $temporaryZip -Destination $destinationZip -Force
+    $checksum = (Get-FileHash -LiteralPath $destinationZip -Algorithm SHA256).Hash.ToLowerInvariant() + "  $zipName"
+    [IO.File]::WriteAllLines((Join-Path $releasePath "DellSmmFanControl-$Version-SHA256SUMS.txt"), [string[]]@($checksum))
+    Write-Output $destinationZip
 }
 finally {
     $resolvedStage = (Resolve-Path -LiteralPath $stagePath).Path

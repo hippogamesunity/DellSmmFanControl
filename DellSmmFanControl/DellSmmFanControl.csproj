@@ -23,9 +23,7 @@
     <Content Include="..\dependencies\bzh_dell_smm_io_x64.sys" Link="bzh_dell_smm_io_x64.sys" ExcludeFromSingleFile="true" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\dependencies\DellSmm-LICENSE.txt" Link="ThirdParty\DellSmm-LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\dependencies\NOTICE.txt" Link="ThirdParty\NOTICE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="..\dependencies\driver-source\**\*" Link="ThirdParty\DriverSource\%(RecursiveDir)%(Filename)%(Extension)" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\LICENSE.md" Link="LICENSE.md" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\NOTICE.md" Link="NOTICE.md" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="..\README.md" Link="README.md" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

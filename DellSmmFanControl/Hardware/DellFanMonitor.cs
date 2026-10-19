@@ -45,7 +45,7 @@ internal sealed class DellFanMonitor : IDisposable
                 int? lowest = TryRead(() => _session.QueryNominalFanRpm(index, 0));
                 low = ValidNominal(low);
                 high = ValidNominal(high);
-                lowest = ValidNominal(lowest) ?? ValidNominal(_session.GetMeasuredMinimumRpm(index));
+                lowest = ValidNominal(lowest);
                 if (low.HasValue && high <= low)
                     high = null;
                 if (low.HasValue && lowest >= low)

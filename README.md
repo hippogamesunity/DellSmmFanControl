@@ -20,6 +20,9 @@ If CPU temperature is unavailable, Auto uses Min and switches to Normal when
 average CPU load over the last full minute exceeds 90%. It returns to Min when
 the average drops to 90% or below. Manual modes remain usable; temperature-based
 control resumes when readings return. CPU load is read using the Windows API.
+Manual Min can be selected on any supported Dell model, even if BIOS does not
+confirm its RPM. Auto uses Normal as its minimum when BIOS does not confirm
+that Min keeps every controlled fan spinning.
 
 ## Running
 

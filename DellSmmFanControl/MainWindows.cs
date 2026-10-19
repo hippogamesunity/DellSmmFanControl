@@ -442,7 +442,7 @@ public partial class MainWindows : Form
         // A failed mode must not prevent selecting another mode or retrying it.
         mode1Button.Enabled = mode2Button.Enabled = mode3Button.Enabled = autoModeButton.Enabled = !_closing;
         controlToolTip.SetToolTip(mode1Button, result.LowestLevelAvailable
-            ? "Minimum speed" : "BIOS has not confirmed that Min keeps the fan spinning");
+            ? "Minimum speed" : "Minimum speed · unconfirmed by BIOS; Auto uses Normal instead");
         controlModeLabel.Text = result.Message;
         controlModeLabel.ForeColor = result.CanControl && result.Snapshot.CpuTemperature.HasValue ? Color.DimGray : Color.Firebrick;
         controlToolTip.SetToolTip(controlModeLabel, result.Message);

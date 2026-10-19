@@ -42,9 +42,6 @@ internal sealed class FanController : IDisposable
             .DistinctBy(profile => profile.Index).ToArray();
         bool lowestAvailable = _activeFans.Length > 0 && _activeFans.All(fan => fan.SupportsMinimum);
         string? reason = _fault;
-        bool needsMinimum = request.Auto ? snapshot.CpuTemperature is null && loadLevel == 0 : request.Level == 0;
-        if (reason is null && needsMinimum && !lowestAvailable)
-            reason = "BIOS has not confirmed that Min keeps the fan spinning";
         if (reason is null && (_activeFans.Length == 0 || snapshot.Fans.Any(fan => fan.Rpm is > 0 &&
             !_activeFans.Any(profile => profile.Index == fan.Index))))
             reason = "No fans are available for control";
@@ -84,7 +81,9 @@ internal sealed class FanController : IDisposable
             {
                 // Only Auto uses the rolling CPU-load fallback. Manual selections
                 // remain effective when temperature-dependent protection is unavailable.
-                autoLevel = loadLevel;
+                // Missing confirmation of Min must not disable Auto when the
+                // temperature sensor is unavailable. Try Normal instead.
+                autoLevel = Math.Max(loadLevel, lowestAvailable ? 0 : 1);
                 _silent.Reset();
                 _emergency = false;
             }

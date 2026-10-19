@@ -16,8 +16,6 @@ internal sealed class DellSmmSession : IDisposable
     private SafeFileHandle? _device;
     private bool _ownsService;
     private bool _restoreBiosControl;
-    private readonly HashSet<int> _levelZeroRuns = [];
-    private readonly int? _measuredMinimumRpm;
     public string? CleanupError { get; private set; }
 
     public DellSmmSession()
@@ -28,11 +26,6 @@ internal sealed class DellSmmSession : IDisposable
         if (bios?.GetValue("SystemManufacturer") is not string manufacturer ||
             !manufacturer.Contains("Dell", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Direct SMM access is supported only on Dell motherboards.");
-
-        _measuredMinimumRpm = DellFanModelProfile.GetMeasuredMinimumRpm(
-            bios?.GetValue("SystemProductName") as string,
-            bios?.GetValue("BaseBoardProduct") as string,
-            bios?.GetValue("BIOSVersion") as string, 0);
 
         string driver = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "bzh_dell_smm_io_x64.sys"));
         // Keep the verified file locked against replacement until the driver
@@ -92,25 +85,10 @@ internal sealed class DellSmmSession : IDisposable
         return Query(DellFanMonitor.GetFanRpmCommand, (uint)fanIndex).Command;
     }
 
-    public int QueryFanLevel(int fanIndex)
-    {
-        int level = (int)(QueryValue(0x00A3, (uint)fanIndex) & 0xff);
-        if (level == 0 && !_levelZeroRuns.Contains(fanIndex))
-        {
-            try
-            {
-                if (DellFanMonitor.DecodeRpm(QueryFanRpm(fanIndex)) > 0)
-                    _levelZeroRuns.Add(fanIndex);
-            }
-            catch (Exception error) when (error is Win32Exception or InvalidDataException) { }
-        }
-        return level;
-    }
+    public int QueryFanLevel(int fanIndex) => (int)(QueryValue(0x00A3, (uint)fanIndex) & 0xff);
 
     public int QueryNominalFanRpm(int fanIndex, int level) =>
         (int)(QueryValue(0x04A3, (uint)(fanIndex | (level << 8))) & 0xffff);
-
-    public int? GetMeasuredMinimumRpm(int fanIndex) => fanIndex == 0 ? _measuredMinimumRpm : null;
 
     public int QuerySensorType(int sensorIndex) => (int)(QueryValue(0x11A3, (uint)sensorIndex) & 0xff);
 
@@ -145,12 +123,8 @@ internal sealed class DellSmmSession : IDisposable
         // UI states 1..3 map to firmware levels 0..2. Level 3 is not a speed.
         ArgumentOutOfRangeException.ThrowIfNegative(level);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(level, 2);
-        if (level == 0 && !_levelZeroRuns.Contains(fanIndex) && GetMeasuredMinimumRpm(fanIndex) is null)
-        {
-            int nominal = QueryNominalFanRpm(fanIndex, 0);
-            if (nominal is <= 0 or > 30000)
-                throw new InvalidOperationException("BIOS has not confirmed that Min keeps the fan spinning.");
-        }
+        // Manual Min is allowed even when firmware cannot describe level 0.
+        // The controller checks actual rotation and selects Auto's minimum.
         QueryValue(0x01A3, (uint)(fanIndex | (level << 8)));
         // Some Dell desktops reject Get Fan State (0x00A3) while accepting
         // Set Fan State. Verify the effect using measured RPM in the controller.

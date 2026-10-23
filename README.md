@@ -6,8 +6,7 @@ original front panel, external temperature sensor or second chassis fan.
 The app controls the remaining fans through Dell SMM using CPU temperature.
 It does not remove BIOS warnings or F1 prompts.
 
-Tested on **OptiPlex 9010 SFF, BIOS A30, Core i7-3770**. Compatibility with
-7010 and other models is not yet confirmed.
+Tested on **OptiPlex 9010 SFF (BIOS A30, Core i7-3770) and OptiPlex 7010 SFF (BIOS A29, Core i5 3570K)**. Compatibility with other models is not yet confirmed.
 
 ![Dell SMM Fan Control](docs/images/main-window.png)
 
